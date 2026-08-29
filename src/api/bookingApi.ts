@@ -127,6 +127,47 @@ export const submitAdminChart = async (
   });
 };
 
+export const updateExpenses = async (
+  token: string,
+  bookingId: string,
+  expenses: Omit<import('../types/booking').Expense, '_id' | 'addedAt'>[],
+): Promise<{ success: boolean }> => {
+  return fetchApi(API_ENDPOINTS.nurseExpenses(bookingId), {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ expenses }),
+  });
+};
+
+export const uploadExpenseReceipt = async (
+  token: string,
+  bookingId: string,
+  imageUri: string,
+  fileName: string,
+  mimeType: string
+): Promise<{ success: boolean; url: string }> => {
+  const formData = new FormData();
+  formData.append('receipt', {
+    uri: imageUri,
+    name: fileName,
+    type: mimeType,
+  } as any);
+
+  const res = await fetch(`${API_ENDPOINTS.nurseExpenses(bookingId)}/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.error || 'Failed to upload receipt');
+  }
+  return res.json();
+};
+
 export const submitConsent = async (
   token: string,
   bookingId: string,

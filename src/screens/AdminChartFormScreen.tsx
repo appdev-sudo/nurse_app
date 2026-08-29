@@ -20,9 +20,7 @@ export const AdminChartFormScreen: React.FC<Props> = ({ route, navigation }) => 
   const [loading, setLoading] = useState(false);
   const [bp, setBp] = useState('');
   const [hr, setHr] = useState('');
-  const [temp, setTemp] = useState('');
   const [spo2, setSpo2] = useState('');
-  const [weight, setWeight] = useState('');
   const [notes, setNotes] = useState('');
 
   const handleSubmit = async () => {
@@ -30,15 +28,13 @@ export const AdminChartFormScreen: React.FC<Props> = ({ route, navigation }) => 
     try {
       if (token) {
         await submitAdminChart(token, bookingId, {
-          bloodPressure: bp || undefined,
-          heartRate: hr ? parseInt(hr) : undefined,
-          temperature: temp ? parseFloat(temp) : undefined,
-          spo2: spo2 ? parseInt(spo2) : undefined,
-          weight: weight ? parseFloat(weight) : undefined,
-          notes,
+          bloodPressure: bp.trim(),
+          heartRate: parseInt(hr, 10) || undefined,
+          spo2: parseInt(spo2, 10) || undefined,
+          notes: notes.trim(),
         });
       }
-      Alert.alert('Saved', 'Admin chart recorded successfully.');
+      Alert.alert('Success', 'Admin chart saved successfully');
       navigation.goBack();
     } catch (err: any) { Alert.alert('Error', err.message); }
     finally { setLoading(false); }
@@ -58,9 +54,7 @@ export const AdminChartFormScreen: React.FC<Props> = ({ route, navigation }) => 
       <Text style={styles.subtitle}>Record patient vitals below</Text>
       {renderField('Blood Pressure', bp, setBp, 'e.g. 120/80 mmHg')}
       {renderField('Heart Rate (bpm)', hr, setHr, 'e.g. 72', 'numeric')}
-      {renderField('Temperature (°F)', temp, setTemp, 'e.g. 98.6', 'numeric')}
       {renderField('SpO2 (%)', spo2, setSpo2, 'e.g. 98', 'numeric')}
-      {renderField('Weight (kg)', weight, setWeight, 'e.g. 65', 'numeric')}
       <View style={styles.field}>
         <Text style={styles.label}>Clinical Notes</Text>
         <TextInput style={[styles.input, styles.textArea]} value={notes} onChangeText={setNotes}

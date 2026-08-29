@@ -38,6 +38,16 @@ export interface InventoryItem {
   isAvailable: boolean;
 }
 
+// ── Expense ─────────────────────────────────────────────────────────────────
+export interface Expense {
+  _id?: string;
+  type: 'Therapeutic' | 'Non-Therapeutic';
+  name: string;
+  price: number;
+  receiptUrl?: string;
+  addedAt?: string;
+}
+
 // ── Booking ─────────────────────────────────────────────────────────────────
 export interface Booking {
   _id: string;
@@ -59,7 +69,8 @@ export interface Booking {
   startedAt?: string;
   completedAt?: string;
   inventory?: InventoryItem[];
-  adminChart?: AdminChart;
+  adminCharts?: AdminChart[];
+  expenses?: Expense[];
   consentSigned?: boolean;
   feedback?: NurseFeedback;
   createdAt: string;
@@ -70,11 +81,9 @@ export interface Booking {
 export interface AdminChart {
   bloodPressure?: string;
   heartRate?: number;
-  temperature?: number;
   spo2?: number;
-  weight?: number;
-  notes: string;
-  recordedAt: string;
+  notes?: string;
+  recordedAt?: string;
 }
 
 // ── Nurse Feedback ──────────────────────────────────────────────────────────
