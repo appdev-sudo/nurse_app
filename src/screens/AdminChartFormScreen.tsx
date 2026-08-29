@@ -8,8 +8,9 @@ import { colors } from '../theme/colors';
 import { fonts, fontSizes, fontWeights } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { useAuth } from '../utils/authContext';
-import { submitAdminChart } from '../api';
+import { getBookingById, submitAdminChart } from '../api';
 import { CustomButton } from '../components/CustomButton';
+import type { AdminChart } from '../types/booking';
 import type { HomeStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'AdminChartForm'>;
@@ -18,10 +19,31 @@ export const AdminChartFormScreen: React.FC<Props> = ({ route, navigation }) => 
   const { bookingId } = route.params;
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [previousCharts, setPreviousCharts] = useState<AdminChart[]>([]);
+  const [showPrevious, setShowPrevious] = useState(false);
+  
   const [bp, setBp] = useState('');
   const [hr, setHr] = useState('');
   const [spo2, setSpo2] = useState('');
   const [notes, setNotes] = useState('');
+
+  React.useEffect(() => {
+    const fetchBooking = async () => {
+      if (!token) return;
+      try {
+        const b = await getBookingById(token, bookingId);
+        if (b.adminCharts) {
+          setPreviousCharts(b.adminCharts);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchBooking();
+  }, [token, bookingId]);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -51,6 +73,26 @@ export const AdminChartFormScreen: React.FC<Props> = ({ route, navigation }) => 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Admin Chart</Text>
+      
+      {!fetching && previousCharts.length > 0 && (
+        <View style={styles.previousSection}>
+          <Pressable style={styles.toggleBtn} onPress={() => setShowPrevious(!showPrevious)}>
+            <Text style={styles.toggleBtnText}>{showPrevious ? 'Hide Previous Readings' : `View Previous Readings (${previousCharts.length})`}</Text>
+          </Pressable>
+          {showPrevious && (
+            <View style={styles.previousList}>
+              {previousCharts.map((chart, idx) => (
+                <View key={idx} style={styles.chartCard}>
+                  <Text style={styles.chartTime}>{chart.recordedAt ? new Date(chart.recordedAt).toLocaleTimeString() : 'Unknown Time'}</Text>
+                  <Text style={styles.chartData}>BP: {chart.bloodPressure || '--'} | HR: {chart.heartRate || '--'} | SpO2: {chart.spo2 || '--'}%</Text>
+                  {chart.notes ? <Text style={styles.chartNotes}>Notes: {chart.notes}</Text> : null}
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+
       <Text style={styles.subtitle}>Record patient vitals below</Text>
       {renderField('Blood Pressure', bp, setBp, 'e.g. 120/80 mmHg')}
       {renderField('Heart Rate (bpm)', hr, setHr, 'e.g. 72', 'numeric')}
@@ -75,4 +117,12 @@ const styles = StyleSheet.create({
   label: { fontFamily: fonts.primary, fontSize: fontSizes.small, fontWeight: fontWeights.medium as any, color: colors.textMuted, marginBottom: spacing.xs },
   input: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(45,212,191,0.2)', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, fontFamily: fonts.primary, fontSize: fontSizes.body, color: colors.textPrimary },
   textArea: { minHeight: 120 },
+  previousSection: { marginBottom: spacing.lg, marginTop: spacing.md },
+  toggleBtn: { backgroundColor: 'rgba(45,212,191,0.1)', padding: spacing.md, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(45,212,191,0.3)' },
+  toggleBtnText: { fontFamily: fonts.primary, color: colors.accentTeal, fontWeight: fontWeights.bold as any },
+  previousList: { marginTop: spacing.sm, gap: spacing.sm },
+  chartCard: { backgroundColor: 'rgba(255,255,255,0.05)', padding: spacing.md, borderRadius: 8 },
+  chartTime: { fontFamily: fonts.primary, fontSize: fontSizes.small, color: colors.textMuted, marginBottom: 4 },
+  chartData: { fontFamily: fonts.primary, fontSize: fontSizes.body, color: colors.textPrimary, fontWeight: fontWeights.medium as any },
+  chartNotes: { fontFamily: fonts.primary, fontSize: fontSizes.small, color: colors.textSecondary, marginTop: 4 },
 });

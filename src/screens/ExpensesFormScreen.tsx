@@ -126,7 +126,7 @@ export const ExpensesFormScreen: React.FC<Props> = ({ route, navigation }) => {
       {/* Added Expenses List */}
       {expenses.length > 0 && (
         <View style={styles.listContainer}>
-          <Text style={styles.sectionTitle}>Added Expenses</Text>
+          <Text style={styles.sectionTitle}>Previously Added Expenses</Text>
           {expenses.map((exp, index) => (
             <View key={index} style={styles.expenseCard}>
               <View style={styles.expenseInfo}>

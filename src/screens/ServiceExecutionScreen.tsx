@@ -3,7 +3,7 @@
  * Start OTP → Verify Details → Admin Chart → Consent → End OTP → Feedback
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
@@ -17,15 +17,15 @@ import type { Booking, CustomerInfo } from '../types/booking';
 import type { HomeStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ServiceExecution'>;
-type Step = 'start_otp' | 'verify_details' | 'admin_chart' | 'consent' | 'end_otp' | 'complete';
+type Step = 'start_otp' | 'verify_details' | 'admin_chart' | 'expenses' | 'consent' | 'end_otp' | 'complete';
 
 const stepLabels: Record<Step, string> = {
   start_otp: 'Start OTP', verify_details: 'Verify Details', admin_chart: 'Admin Chart',
-  consent: 'Consent Form', end_otp: 'End OTP', complete: 'Complete',
+  expenses: 'Expenses', consent: 'Consent Form', end_otp: 'End OTP', complete: 'Complete',
 };
 const stepIcons: Record<Step, string> = {
   start_otp: 'lock-open-outline', verify_details: 'account-check-outline', admin_chart: 'clipboard-pulse-outline',
-  consent: 'file-sign', end_otp: 'lock-check-outline', complete: 'check-decagram',
+  expenses: 'currency-usd', consent: 'file-sign', end_otp: 'lock-check-outline', complete: 'check-decagram',
 };
 
 export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) => {
@@ -34,9 +34,17 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState<Step>('start_otp');
+  const [furthestStepIdx, setFurthestStepIdx] = useState(0);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpLoading, setOtpLoading] = useState(false);
   const [detailsVerified, setDetailsVerified] = useState(false);
+
+  const allSteps: Step[] = ['start_otp', 'verify_details', 'admin_chart', 'expenses', 'consent', 'end_otp', 'complete'];
+
+  const goToStep = (s: Step) => {
+    setCurrentStep(s);
+    setFurthestStepIdx(prev => Math.max(prev, allSteps.indexOf(s)));
+  };
 
   const fetchBooking = useCallback(async () => {
     if (!token) return;
@@ -45,10 +53,14 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
       setBooking(b);
       // Resume from correct step
       if (b.status === 'in_progress') {
-        if (b.consentSigned) setCurrentStep('end_otp');
-        else if (b.adminChart) setCurrentStep('consent');
-        else setCurrentStep('verify_details');
-      } else if (b.status === 'completed') { setCurrentStep('complete'); }
+        let step: Step = 'verify_details';
+        if (b.consentSigned) step = 'end_otp';
+        else if (b.expenses && b.expenses.length > 0) step = 'consent';
+        else if (b.adminChart) step = 'expenses';
+        goToStep(step);
+      } else if (b.status === 'completed') { 
+        goToStep('complete'); 
+      }
     } catch (err: any) { Alert.alert('Error', err.message); }
     finally { setLoading(false); }
   }, [token, bookingId]);
@@ -66,7 +78,7 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
         const fresh = await getBookingById(token, bookingId);
         setBooking(fresh);
       }
-      setCurrentStep('verify_details');
+      goToStep('verify_details');
       setOtp(['', '', '', '', '', '']);
     } catch (err: any) { Alert.alert('Error', err.message); setOtp(['', '', '', '', '', '']); }
     finally { setOtpLoading(false); }
@@ -78,7 +90,7 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
     setOtpLoading(true);
     try {
       if (token) { const res = await endService(token, bookingId, c); setBooking(res.booking); }
-      setCurrentStep('complete');
+      goToStep('complete');
       setOtp(['', '', '', '', '', '']);
       navigation.navigate('Feedback', { bookingId });
     } catch (err: any) { Alert.alert('Error', err.message); setOtp(['', '', '', '', '', '']); }
@@ -101,22 +113,29 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
         location: userObj.location,
       }
     : null;
-  const allSteps: Step[] = ['start_otp', 'verify_details', 'admin_chart', 'consent', 'end_otp', 'complete'];
   const currentIdx = allSteps.indexOf(currentStep);
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       {/* Progress Steps */}
       <View style={styles.stepsRow}>
-        {allSteps.slice(0, -1).map((s, i) => (
-          <View key={s} style={styles.stepItem}>
-            <View style={[styles.stepCircle, i < currentIdx && styles.stepDone, i === currentIdx && styles.stepActive]}>
-              <MaterialCommunityIcons name={i < currentIdx ? 'check' : stepIcons[s]} size={16}
-                color={i <= currentIdx ? colors.backgroundNavy : colors.textSecondary} />
+        {allSteps.slice(0, -1).map((s, i) => {
+          const isReached = i <= furthestStepIdx;
+          const canPress = isReached && booking?.status === 'in_progress' && i > 0;
+          return (
+            <View key={s} style={styles.stepItem}>
+              <Pressable
+                style={[styles.stepCircle, i < currentIdx && styles.stepDone, i === currentIdx && styles.stepActive]}
+                onPress={() => { if (canPress) goToStep(s); }}
+                disabled={!canPress}
+              >
+                <MaterialCommunityIcons name={i < currentIdx ? 'check' : stepIcons[s]} size={16}
+                  color={i <= currentIdx ? colors.backgroundNavy : colors.textSecondary} />
+              </Pressable>
+              {i < allSteps.length - 2 && <View style={[styles.stepLine, i < currentIdx && styles.stepLineDone]} />}
             </View>
-            {i < allSteps.length - 2 && <View style={[styles.stepLine, i < currentIdx && styles.stepLineDone]} />}
-          </View>
-        ))}
+          );
+        })}
       </View>
       <Text style={styles.stepLabel}>{stepLabels[currentStep]}</Text>
 
@@ -143,7 +162,7 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
             <View style={styles.verifyRow}><Text style={styles.verifyLabel}>Phone</Text><Text style={styles.verifyValue}>{customer?.phone || 'Not available'}</Text></View>
           </View>
           <CustomButton title={detailsVerified ? '✓ Verified — Continue' : 'Confirm Details are Correct'}
-            onPress={() => { setDetailsVerified(true); setTimeout(() => setCurrentStep('admin_chart'), 500); }}
+            onPress={() => { setDetailsVerified(true); setTimeout(() => goToStep('admin_chart'), 300); }}
             variant={detailsVerified ? 'success' : 'primary'} style={{ marginTop: spacing.xl }} />
         </View>
       )}
@@ -153,7 +172,16 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
         <View style={styles.stepContent}>
           <Text style={styles.sectionDesc}>Record the patient's vitals and any notes.</Text>
           <CustomButton title="Open Admin Chart Form" onPress={() => navigation.navigate('AdminChartForm', { bookingId })} style={{ marginTop: spacing.lg }} />
-          <CustomButton title="Skip → Consent" onPress={() => setCurrentStep('consent')} variant="outline" style={{ marginTop: spacing.md }} />
+          <CustomButton title="Skip Admin Chart Form" onPress={() => goToStep('expenses')} variant="outline" style={{ marginTop: spacing.md }} />
+        </View>
+      )}
+
+      {/* Step: Expenses */}
+      {currentStep === 'expenses' && (
+        <View style={styles.stepContent}>
+          <Text style={styles.sectionDesc}>Add any therapeutic or non-therapeutic expenses incurred during the service.</Text>
+          <CustomButton title="Add / Edit Expenses" onPress={() => navigation.navigate('ExpensesForm', { bookingId })} style={{ marginTop: spacing.lg }} />
+          <CustomButton title="Skip Expenses Form" onPress={() => goToStep('consent')} variant="outline" style={{ marginTop: spacing.md }} />
         </View>
       )}
 
@@ -162,7 +190,7 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
         <View style={styles.stepContent}>
           <Text style={styles.sectionDesc}>Get the client's consent signature before proceeding.</Text>
           <CustomButton title="Open Consent Form" onPress={() => navigation.navigate('ConsentForm', { bookingId })} style={{ marginTop: spacing.lg }} />
-          <CustomButton title="Skip → End Service" onPress={() => setCurrentStep('end_otp')} variant="outline" style={{ marginTop: spacing.md }} />
+          <CustomButton title="Skip → End Service" onPress={() => goToStep('end_otp')} variant="outline" style={{ marginTop: spacing.md }} />
         </View>
       )}
 
