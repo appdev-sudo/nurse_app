@@ -37,7 +37,7 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
     try {
       const response = await verifyOTP(phoneNumber, code);
       // The backend returns user; we map it to nurse profile structure
-      await login(response.token, response.nurse || response.user as any);
+      await login(response.token, response.nurse || (response as any).user);
       // Navigation will be handled by RootNavigator based on auth state
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Invalid OTP');

@@ -16,6 +16,8 @@ export {
   submitConsent,
   submitFeedback,
   getBookingInventory,
+  updateExpenses,
+  uploadExpenseReceipt,
 } from './bookingApi';
 export {
   registerNurse,

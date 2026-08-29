@@ -2,7 +2,7 @@
  * AdminChartFormScreen — Record patient vitals and clinical notes.
  */
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { fonts, fontSizes, fontWeights } from '../theme/typography';

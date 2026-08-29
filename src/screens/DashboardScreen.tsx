@@ -114,7 +114,7 @@ export const DashboardScreen: React.FC = () => {
   };
 
   // ── Filter logic ────────────────────────────────────────────────────────
-  const getFilteredList = (): { data: Booking[]; source: 'available' | 'mine' }[] => {
+  const getFilteredList = (): { data: Booking; source: 'available' | 'mine' }[] => {
     switch (activeFilter) {
       case 'available':
         return availableBookings.map(b => ({ data: b, source: 'available' as const }));

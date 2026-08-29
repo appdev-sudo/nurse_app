@@ -56,7 +56,7 @@ export const ServiceExecutionScreen: React.FC<Props> = ({ route, navigation }) =
         let step: Step = 'verify_details';
         if (b.consentSigned) step = 'end_otp';
         else if (b.expenses && b.expenses.length > 0) step = 'consent';
-        else if (b.adminChart) step = 'expenses';
+        else if (b.adminCharts && b.adminCharts.length > 0) step = 'expenses';
         goToStep(step);
       } else if (b.status === 'completed') { 
         goToStep('complete'); 
