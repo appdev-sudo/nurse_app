@@ -3,7 +3,7 @@
  * Shows client info, address with Google Maps link, and inventory.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
@@ -23,25 +23,47 @@ export const BookingDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { bookingId } = route.params;
   const { token } = useAuth();
   const [booking, setBooking] = useState<Booking | null>(null);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Master lists
+  const CONSUMABLES = [
+    'VEINFLOW', 'SCALP', 'TEGADERM', 'ALCOHOL SWAB', 'IV SET',
+    'SYRINGE 10 ML', 'SYRINGE 5 ML', 'NS 500 ML', 'NS 250 ML',
+    'NS 100 ML', 'IV PLASTER', 'COCKTAIL KIT', 'GLOVES PAIR'
+  ];
+  const INJECTABLES = [
+    'NAD 500 MG', 'INJ GLUTATHION', 'INJ VITAMIN C', 'INJ NAC',
+    'INJ ZINC', 'INJ MAGNESIUM', 'INJ B COMPLEX', 'INJ TRACE ELEMENTS',
+    'INJ MVI', 'INJ COLLAGEN', 'INJ L-CARNITINE', 'INJ L-GLUTAMINE 50 ML',
+    'INJ ENCICARB 1K', 'INJ ONDEM'
+  ];
+  const EQUIPMENT = ['IV stand', 'bp monitor', 'pulse oxymeter'];
+
+  // UI State
+  const [quantities, setQuantities] = useState<Record<string, number>>(
+    CONSUMABLES.reduce((acc, item) => ({ ...acc, [item]: 1 }), {})
+  );
+  const [doses, setDoses] = useState<Record<string, string>>({});
+  const [equipment, setEquipment] = useState<Record<string, boolean>>({});
 
   const fetchData = useCallback(async () => {
     if (!token) return;
     try {
-      const [b, inv] = await Promise.all([
-        getBookingById(token, bookingId),
-        getBookingInventory(token, bookingId).catch(() => ({ inventory: [] })),
-      ]);
+      const b = await getBookingById(token, bookingId);
       setBooking(b);
-      setInventory(inv.inventory || []);
     } catch (err: any) { Alert.alert('Error', err.message); }
     finally { setLoading(false); }
   }, [token, bookingId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleStartService = () => { navigation.navigate('ServiceExecution', { bookingId }); };
+  const handleStartService = () => { 
+    // Pass checklist state forward so it can be saved or used during execution
+    navigation.navigate('ServiceExecution', { 
+      bookingId,
+      checklist: { quantities, doses, equipment }
+    } as any); 
+  };
 
   if (loading || !booking) {
     return <View style={styles.center}><ActivityIndicator size="large" color={colors.accentTeal} /></View>;
@@ -112,19 +134,66 @@ export const BookingDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         </Pressable>
       </View>
 
-      {/* Inventory */}
-      {inventory.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Required Inventory</Text>
-          {inventory.map((item, i) => (
-            <View key={i} style={styles.inventoryRow}>
-              <MaterialCommunityIcons name={item.isAvailable ? 'check-circle' : 'alert-circle'} size={18} color={item.isAvailable ? colors.accentGreen : colors.accentOrange} />
-              <Text style={styles.inventoryName}>{item.name}</Text>
-              <Text style={styles.inventoryQty}>{item.quantity} {item.unit}</Text>
+      {/* Consumables Inventory */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Required Consumables</Text>
+        {CONSUMABLES.map((item) => (
+          <View key={item} style={styles.inventoryRow}>
+            <Text style={styles.inventoryName}>{item}</Text>
+            <View style={styles.quantityControl}>
+              <TouchableOpacity 
+                style={styles.qtyButton} 
+                onPress={() => setQuantities(prev => ({ ...prev, [item]: Math.max(0, prev[item] - 1) }))}
+              >
+                <MaterialCommunityIcons name="minus" size={16} color={colors.textPrimary} />
+              </TouchableOpacity>
+              <Text style={styles.qtyText}>{quantities[item]}</Text>
+              <TouchableOpacity 
+                style={styles.qtyButton} 
+                onPress={() => setQuantities(prev => ({ ...prev, [item]: prev[item] + 1 }))}
+              >
+                <MaterialCommunityIcons name="plus" size={16} color={colors.textPrimary} />
+              </TouchableOpacity>
             </View>
-          ))}
-        </View>
-      )}
+          </View>
+        ))}
+      </View>
+
+      {/* Injectables & Doses */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Injectables & Doses</Text>
+        {INJECTABLES.map((item) => (
+          <View key={item} style={styles.inventoryRow}>
+            <Text style={styles.inventoryName}>{item}</Text>
+            <TextInput
+              style={styles.doseInput}
+              placeholder="Enter dose..."
+              placeholderTextColor={colors.textMuted}
+              value={doses[item] || ''}
+              onChangeText={(text) => setDoses(prev => ({ ...prev, [item]: text }))}
+            />
+          </View>
+        ))}
+      </View>
+
+      {/* Equipment Checkboxes */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Equipment Checklist</Text>
+        {EQUIPMENT.map((item) => (
+          <TouchableOpacity 
+            key={item} 
+            style={styles.checkboxRow}
+            onPress={() => setEquipment(prev => ({ ...prev, [item]: !prev[item] }))}
+          >
+            <MaterialCommunityIcons 
+              name={equipment[item] ? 'checkbox-marked' : 'checkbox-blank-outline'} 
+              size={24} 
+              color={equipment[item] ? colors.accentTeal : colors.textMuted} 
+            />
+            <Text style={styles.checkboxText}>{item}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* Notes */}
       {booking.notes && (
@@ -155,8 +224,13 @@ const styles = StyleSheet.create({
   addressText: { fontFamily: fonts.primary, fontSize: fontSizes.small, color: colors.textMuted, lineHeight: 20, marginBottom: spacing.md },
   mapsButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.accentGreen, borderRadius: 12, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, alignSelf: 'flex-start', gap: 6 },
   mapsButtonText: { fontFamily: fonts.primary, fontSize: fontSizes.small, fontWeight: fontWeights.semibold as any, color: colors.backgroundNavy },
-  inventoryRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+  inventoryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
   inventoryName: { flex: 1, fontFamily: fonts.primary, fontSize: fontSizes.small, color: colors.textPrimary },
-  inventoryQty: { fontFamily: fonts.primary, fontSize: fontSizes.small, fontWeight: fontWeights.semibold as any, color: colors.accentTeal },
+  quantityControl: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 4 },
+  qtyButton: { padding: 4 },
+  qtyText: { fontFamily: fonts.primary, fontSize: fontSizes.small, color: colors.textPrimary, width: 24, textAlign: 'center', fontWeight: 'bold' as any },
+  doseInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: colors.textPrimary, fontFamily: fonts.primary, fontSize: fontSizes.small },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md, gap: spacing.sm },
+  checkboxText: { fontFamily: fonts.primary, fontSize: fontSizes.small, color: colors.textPrimary, textTransform: 'capitalize' },
   notesText: { fontFamily: fonts.primary, fontSize: fontSizes.small, color: colors.textMuted, lineHeight: 20 },
 });
