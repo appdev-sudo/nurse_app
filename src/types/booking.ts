@@ -68,6 +68,11 @@ export interface Booking {
   endOtp?: string;                    // generated when service ending
   startedAt?: string;
   completedAt?: string;
+  checklist?: {
+    quantities?: Record<string, number>;
+    doses?: Record<string, string>;
+    equipment?: Record<string, boolean>;
+  };
   inventory?: InventoryItem[];
   adminCharts?: AdminChart[];
   expenses?: Expense[];

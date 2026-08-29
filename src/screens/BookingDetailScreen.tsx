@@ -10,7 +10,7 @@ import { colors } from '../theme/colors';
 import { fonts, fontSizes, fontWeights } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { useAuth } from '../utils/authContext';
-import { getBookingById, getBookingInventory } from '../api';
+import { getBookingById, saveChecklist } from '../api';
 import { CustomButton } from '../components/CustomButton';
 import { StatusBadge } from '../components/StatusBadge';
 import { formatDate, formatTime } from '../utils/helpers';
@@ -46,16 +46,36 @@ export const BookingDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [doses, setDoses] = useState<Record<string, string>>({});
   const [equipment, setEquipment] = useState<Record<string, boolean>>({});
 
+  const [savingChecklist, setSavingChecklist] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!token) return;
     try {
       const b = await getBookingById(token, bookingId);
       setBooking(b);
+      if (b.checklist) {
+        if (b.checklist.quantities) setQuantities(b.checklist.quantities);
+        if (b.checklist.doses) setDoses(b.checklist.doses);
+        if (b.checklist.equipment) setEquipment(b.checklist.equipment);
+      }
     } catch (err: any) { Alert.alert('Error', err.message); }
     finally { setLoading(false); }
   }, [token, bookingId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleSaveChecklist = async () => {
+    if (!token) return;
+    setSavingChecklist(true);
+    try {
+      await saveChecklist(token, bookingId, { quantities, doses, equipment });
+      Alert.alert('Success', 'Inventory checklist saved successfully!');
+    } catch (err: any) {
+      Alert.alert('Error', err.message);
+    } finally {
+      setSavingChecklist(false);
+    }
+  };
 
   const handleStartService = () => { 
     // Pass checklist state forward so it can be saved or used during execution
@@ -199,6 +219,15 @@ export const BookingDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       {booking.notes && (
         <View style={styles.card}><Text style={styles.cardTitle}>Notes</Text><Text style={styles.notesText}>{booking.notes}</Text></View>
       )}
+
+      {/* Save Inventory */}
+      <CustomButton 
+        title="Save Inventory Checklist" 
+        onPress={handleSaveChecklist} 
+        loading={savingChecklist} 
+        variant="outline" 
+        style={{ marginTop: spacing.md }} 
+      />
 
       {/* Action */}
       {(booking.status === 'accepted' || booking.status === 'in_progress') && (

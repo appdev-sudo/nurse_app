@@ -3,7 +3,7 @@
  * Handles fetching assigned bookings, accept/reject, service execution OTPs,
  * admin chart, consent, and feedback submission.
  */
-import { API_ENDPOINTS } from '../config/api';
+import { API_BASE_URL, API_ENDPOINTS } from '../config/api';
 import { fetchApi } from './client';
 import type { Booking, AdminChart, NurseFeedback } from '../types/booking';
 
@@ -153,7 +153,7 @@ export const uploadExpenseReceipt = async (
     type: mimeType,
   } as any);
 
-  const res = await fetch(`${API_ENDPOINTS.nurseExpenses(bookingId)}/upload`, {
+  const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.nurseExpenses(bookingId)}/upload`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -201,4 +201,16 @@ export const getBookingInventory = async (
   bookingId: string,
 ): Promise<{ inventory: Booking['inventory'] }> => {
   return fetchApi(API_ENDPOINTS.nurseInventory(bookingId), { token });
+};
+
+export const saveChecklist = async (
+  token: string,
+  bookingId: string,
+  checklist: any,
+): Promise<{ success: boolean }> => {
+  return fetchApi(API_ENDPOINTS.nurseChecklist(bookingId), {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ checklist }),
+  });
 };

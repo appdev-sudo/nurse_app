@@ -4,9 +4,9 @@
  */
 const getDefaultBaseUrl = () => {
   if (__DEV__) {
-    return 'https://a2b0-2401-4900-1cab-bbdd-487-678f-a779-6737.ngrok-free.app';
+    return 'https://api.vytalyou.com';
   }
-  return 'https://a2b0-2401-4900-1cab-bbdd-487-678f-a779-6737.ngrok-free.app';
+  return 'https://api.vytalyou.com';
 };
 
 export const API_BASE_URL = getDefaultBaseUrl();
@@ -39,9 +39,11 @@ export const API_ENDPOINTS = {
   nurseServiceStart: (id: string) => `/api/nurse/bookings/${id}/start`,
   nurseServiceEnd: (id: string) => `/api/nurse/bookings/${id}/end`,
   nurseAdminChart: (id: string) => `/api/nurse/bookings/${id}/admin-chart`,
+  nurseExpenses: (id: string) => `/api/nurse/bookings/${id}/expenses`,
   nurseConsent: (id: string) => `/api/nurse/bookings/${id}/consent`,
   nurseFeedback: (id: string) => `/api/nurse/bookings/${id}/feedback`,
 
   // Inventory
   nurseInventory: (id: string) => `/api/nurse/bookings/${id}/inventory`,
+  nurseChecklist: (id: string) => `/api/nurse/bookings/${id}/checklist`,
 } as const;

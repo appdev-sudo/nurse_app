@@ -18,6 +18,7 @@ export {
   getBookingInventory,
   updateExpenses,
   uploadExpenseReceipt,
+  saveChecklist,
 } from './bookingApi';
 export {
   registerNurse,
