@@ -62,6 +62,8 @@ export const DashboardScreen: React.FC = () => {
     time: formatTime(b.preferredTimeSlot),
     date: formatShortDate(b.preferredDate),
     status: b.status,
+    isSubSession: b.isSubSession,
+    sessionName: b.sessionName,
   });
 
   // ── Actions ─────────────────────────────────────────────────────────────

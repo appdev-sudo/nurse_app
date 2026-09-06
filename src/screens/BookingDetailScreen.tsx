@@ -124,7 +124,14 @@ export const BookingDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
       {/* Service Info */}
       <View style={styles.section}>
-        <Text style={styles.serviceTitle}>{booking.serviceTitle}</Text>
+        <Text style={styles.serviceTitle}>
+          {booking.isSubSession && booking.sessionName ? booking.sessionName : booking.serviceTitle}
+        </Text>
+        {booking.isSubSession && booking.subscription?.serviceTitle && (
+          <Text style={{color: '#60A5FA', fontSize: 13, marginTop: 4, fontWeight: 'bold'}}>
+            Part of: {booking.subscription.serviceTitle}
+          </Text>
+        )}
         <View style={styles.metaRow}>
           <MaterialCommunityIcons name="calendar-blank-outline" size={16} color={colors.textSecondary} />
           <Text style={styles.metaText}>{formatDate(booking.preferredDate)}</Text>
@@ -147,12 +154,27 @@ export const BookingDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       {/* Location */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Location</Text>
-        <Text style={styles.addressText}>{booking.address?.formattedAddress || `${booking.address?.street}, ${booking.address?.city}`}</Text>
+        <Text style={styles.addressText}>{booking.address?.formattedAddress || `${booking.address?.street || ''}, ${booking.address?.city || ''}`}</Text>
         <Pressable onPress={openMaps} style={styles.mapsButton}>
           <MaterialCommunityIcons name="google-maps" size={20} color={colors.backgroundNavy} />
           <Text style={styles.mapsButtonText}>Open in Google Maps</Text>
         </Pressable>
       </View>
+
+      {/* Payment Details */}
+      {booking.totalAmount !== undefined && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Payment Details</Text>
+          <View style={styles.detailRow}><Text style={styles.detailLabel}>Total Amount</Text><Text style={[styles.detailValue, {fontWeight: 'bold'}]}>Rs. {booking.totalAmount}</Text></View>
+          <View style={styles.detailRow}><Text style={styles.detailLabel}>Amount Paid</Text><Text style={[styles.detailValue, {fontWeight: 'bold'}]}>Rs. {booking.amountPaid || 0}</Text></View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Status</Text>
+            <Text style={[styles.detailValue, {color: booking.paymentStatus === 'paid' ? colors.accentGreen : colors.accentYellow, fontWeight: 'bold'}]}>
+              {(booking.paymentStatus || 'pending').toUpperCase()}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Consumables Inventory */}
       <View style={styles.card}>

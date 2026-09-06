@@ -59,6 +59,8 @@ export const MyBookingsScreen: React.FC = () => {
     time: formatTime(b.preferredTimeSlot),
     date: formatShortDate(b.preferredDate),
     status: b.status,
+    isSubSession: b.isSubSession,
+    sessionName: b.sessionName,
   });
 
   const handleAccept = async (id: string) => {

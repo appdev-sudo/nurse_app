@@ -63,7 +63,14 @@ export interface Booking {
   notes?: string;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
+  totalAmount?: number;
+  amountPaid?: number;
   paymentId?: string;
+  isSubSession?: boolean;
+  subscription?: { _id: string; serviceTitle?: string; };
+  sessionName?: string;
+  locationType?: 'home' | 'clinic';
+  clinicLocation?: string;
   startOtp?: string;                  // generated when nurse arrives
   endOtp?: string;                    // generated when service ending
   startedAt?: string;
@@ -106,4 +113,6 @@ export interface BookingCardData {
   time: string;                 // e.g. "3 PM"
   date: string;                 // e.g. "12 May"
   status: BookingStatus;
+  isSubSession?: boolean;
+  sessionName?: string;
 }

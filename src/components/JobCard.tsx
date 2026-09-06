@@ -124,7 +124,9 @@ export const JobCard: React.FC<JobCardProps> = ({
               size={18}
               color={colors.accentTeal}
             />
-            <Text style={styles.infoLabel}>{booking.service}</Text>
+            <Text style={styles.infoLabel} numberOfLines={1}>
+              {booking.isSubSession && booking.sessionName ? booking.sessionName : booking.service}
+            </Text>
           </View>
 
           <View style={styles.separator} />
@@ -141,12 +143,19 @@ export const JobCard: React.FC<JobCardProps> = ({
 
         {/* Date Row */}
         <View style={styles.dateRow}>
-          <MaterialCommunityIcons
-            name="calendar-blank-outline"
-            size={14}
-            color={colors.textSecondary}
-          />
-          <Text style={styles.dateText}>{booking.date}</Text>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <MaterialCommunityIcons
+              name="calendar-blank-outline"
+              size={14}
+              color={colors.textSecondary}
+            />
+            <Text style={styles.dateText}>{booking.date}</Text>
+          </View>
+          {booking.isSubSession && (
+            <View style={{backgroundColor: 'rgba(59, 130, 246, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8}}>
+              <Text style={{color: '#60A5FA', fontSize: 10, fontWeight: 'bold'}}>SUBSCRIPTION</Text>
+            </View>
+          )}
         </View>
 
         {/* Accept / Reject Actions */}
