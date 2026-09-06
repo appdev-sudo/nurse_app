@@ -61,6 +61,7 @@ export const MyBookingsScreen: React.FC = () => {
     status: b.status,
     isSubSession: b.isSubSession,
     sessionName: b.sessionName,
+    clientName: typeof b.user === 'object' ? (b.user as any)?.name : undefined,
   });
 
   const handleAccept = async (id: string) => {

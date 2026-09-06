@@ -64,6 +64,7 @@ export const DashboardScreen: React.FC = () => {
     status: b.status,
     isSubSession: b.isSubSession,
     sessionName: b.sessionName,
+    clientName: typeof b.user === 'object' ? (b.user as any)?.name : undefined,
   });
 
   // ── Actions ─────────────────────────────────────────────────────────────

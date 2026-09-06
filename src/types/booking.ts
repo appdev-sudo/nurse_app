@@ -115,4 +115,5 @@ export interface BookingCardData {
   status: BookingStatus;
   isSubSession?: boolean;
   sessionName?: string;
+  clientName?: string;
 }

@@ -105,57 +105,56 @@ export const JobCard: React.FC<JobCardProps> = ({
           </Text>
         </View>
 
-        {/* Main Info Row: Location | Service | Time */}
-        <View style={styles.infoRow}>
-          <View style={styles.infoItem}>
-            <MaterialCommunityIcons
-              name="map-marker-outline"
-              size={18}
-              color={colors.accentTeal}
-            />
-            <Text style={styles.infoLabel}>{booking.location}</Text>
-          </View>
-
-          <View style={styles.separator} />
-
-          <View style={styles.infoItem}>
-            <MaterialCommunityIcons
-              name="medical-bag"
-              size={18}
-              color={colors.accentTeal}
-            />
-            <Text style={styles.infoLabel} numberOfLines={1}>
+        {/* Main Info */}
+        <View style={styles.infoContainer}>
+          {/* Service Name */}
+          <View style={styles.infoLine}>
+            <MaterialCommunityIcons name="medical-bag" size={16} color={colors.accentTeal} style={styles.iconMargin} />
+            <Text style={styles.primaryText} numberOfLines={2}>
               {booking.isSubSession && booking.sessionName ? booking.sessionName : booking.service}
             </Text>
           </View>
-
-          <View style={styles.separator} />
-
-          <View style={styles.infoItem}>
-            <MaterialCommunityIcons
-              name="clock-outline"
-              size={18}
-              color={colors.accentTeal}
-            />
-            <Text style={styles.infoLabel}>{booking.time}</Text>
+          
+          {/* Client Name */}
+          <View style={styles.infoLine}>
+            <MaterialCommunityIcons name="account-outline" size={16} color={colors.accentTeal} style={styles.iconMargin} />
+            <Text style={styles.secondaryText} numberOfLines={1}>
+              {booking.clientName || 'Client TBD'}
+            </Text>
           </View>
-        </View>
 
-        {/* Date Row */}
-        <View style={styles.dateRow}>
-          <View style={{flexDirection: 'row', alignItems: 'center'}}>
-            <MaterialCommunityIcons
-              name="calendar-blank-outline"
-              size={14}
-              color={colors.textSecondary}
-            />
-            <Text style={styles.dateText}>{booking.date}</Text>
-          </View>
-          {booking.isSubSession && (
-            <View style={{backgroundColor: 'rgba(59, 130, 246, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8}}>
-              <Text style={{color: '#60A5FA', fontSize: 10, fontWeight: 'bold'}}>SUBSCRIPTION</Text>
+          {/* Location & Time Row */}
+          <View style={styles.infoLine}>
+            <View style={styles.flexHalf}>
+              <MaterialCommunityIcons name="map-marker-outline" size={16} color={colors.accentTeal} style={styles.iconMargin} />
+              <Text style={styles.secondaryText} numberOfLines={1}>
+                {!booking.location || booking.location === 'Unknown' ? 'Location TBD' : booking.location}
+              </Text>
             </View>
-          )}
+            <View style={styles.flexHalf}>
+              <MaterialCommunityIcons name="clock-outline" size={16} color={colors.accentTeal} style={styles.iconMargin} />
+              <Text style={styles.secondaryText} numberOfLines={1}>
+                {booking.time || 'Time TBD'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Date & Type Row */}
+          <View style={styles.infoLine}>
+             <View style={styles.flexHalf}>
+               <MaterialCommunityIcons name="calendar-blank-outline" size={16} color={colors.accentTeal} style={styles.iconMargin} />
+               <Text style={styles.secondaryText} numberOfLines={1}>
+                 {booking.date || 'Date TBD'}
+               </Text>
+             </View>
+             <View style={styles.flexHalf}>
+               {booking.isSubSession ? (
+                 <View style={styles.badgeSub}><Text style={styles.badgeSubText}>SUBSCRIPTION</Text></View>
+               ) : (
+                 <View style={styles.badgeInd}><Text style={styles.badgeIndText}>INDIVIDUAL</Text></View>
+               )}
+             </View>
+          </View>
         </View>
 
         {/* Accept / Reject Actions */}
@@ -253,42 +252,58 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  infoRow: {
+  infoContainer: {
+    marginBottom: spacing.md,
+    gap: 8,
+  },
+  infoLine: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
   },
-  infoItem: {
+  flexHalf: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
-  infoLabel: {
+  iconMargin: {
+    marginRight: 8,
+  },
+  primaryText: {
     fontFamily: fonts.primary,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold as any,
+    fontWeight: fontWeights.bold as any,
     color: colors.textPrimary,
-    flexShrink: 1,
+    flex: 1,
   },
-  separator: {
-    width: 1,
-    height: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    marginHorizontal: spacing.sm,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: spacing.md,
-  },
-  dateText: {
+  secondaryText: {
     fontFamily: fonts.primary,
     fontSize: fontSizes.small,
-    fontWeight: fontWeights.regular as any,
     color: colors.textSecondary,
+    flex: 1,
+  },
+  badgeSub: {
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  badgeSubText: {
+    color: '#60A5FA',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  badgeInd: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  badgeIndText: {
+    color: '#10B981',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   actionRow: {
     flexDirection: 'row',
