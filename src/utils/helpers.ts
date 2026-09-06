@@ -3,7 +3,8 @@
  */
 
 /** Format ISO date to display string (e.g. "12 May 2026"). */
-export function formatDate(isoDate: string): string {
+export function formatDate(isoDate?: string): string {
+  if (!isoDate) return '';
   const date = new Date(isoDate);
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -13,7 +14,8 @@ export function formatDate(isoDate: string): string {
 }
 
 /** Format ISO date to short date (e.g. "12 May"). */
-export function formatShortDate(isoDate: string): string {
+export function formatShortDate(isoDate?: string): string {
+  if (!isoDate) return '';
   const date = new Date(isoDate);
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -23,7 +25,8 @@ export function formatShortDate(isoDate: string): string {
 }
 
 /** Format time slot string or ISO date to display time (e.g. "3 PM"). */
-export function formatTime(timeSlot: string): string {
+export function formatTime(timeSlot?: string): string {
+  if (!timeSlot) return '';
   // If it's already a readable format like "3 PM", return as-is
   if (/^\d{1,2}\s*(AM|PM)$/i.test(timeSlot.trim())) {
     return timeSlot.trim();
